@@ -6,11 +6,9 @@ from matplotlib import pyplot as plt
 from wordcloud import WordCloud
 nltk.download('punkt')
 
-#Retrieve a copy of the text from the url
-text_file = urllib.request.urlopen("https://www.gutenberg.org/cache/epub/2701/pg2701.txt")
-
-#Read and decode the text
-text = text_file.read().decode('utf-8')
+#read and decode text
+with open("germanText.txt", "r", encoding="utf-8") as f:
+    text = f.read()
 
 #tokenize text by words
 words = word_tokenize(text)
