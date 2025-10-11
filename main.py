@@ -2,6 +2,7 @@ import nltk
 from nltk import word_tokenize
 from nltk.probability import FreqDist
 from matplotlib import pyplot as plt
+import networkx as nx
 
 nltk.download('punkt')
 
@@ -61,4 +62,42 @@ plt.xlabel("Rank (r)")
 plt.ylabel("Frequency (f)")
 plt.title("Zipf's Law - log-log plot")
 plt.grid(True)
+plt.show()
+
+neighbors_dict = {}
+
+for index, word in enumerate(words_no_punc):
+    if word not in neighbors_dict:
+        neighbors_dict[word] = []
+    if index -1 >= 0:
+        neighbors_dict[word].append(words_no_punc[index - 1])
+    if index +1 < total_words:
+        neighbors_dict[word].append(words_no_punc[index + 1])
+
+# get rid of duplicates
+
+for word in neighbors_dict:
+    neighbors_dict[word] = list(set(neighbors_dict[word]))
+
+
+# Create an empty graph
+#
+neighbors_graph = nx.Graph()
+
+for word, word_neighbors in neighbors_dict.items():
+    if word not in neighbors_graph:
+        neighbors_graph.add_node(word)
+        for neighbor in word_neighbors:
+            if word != neighbor:
+                neighbors_graph.add_edge(word, neighbor)
+
+# Draw the graph
+plt.figure(figsize=(15, 15))
+
+degrees = dict(neighbors_graph.degree())
+
+top_connected_words = sorted(degrees, key=degrees.get, reverse=True)[:100]
+
+neighbors_subgraph = neighbors_graph.subgraph(top_connected_words)
+nx.draw(neighbors_subgraph, with_labels=True, node_size=50, alpha=0.5)
 plt.show()
