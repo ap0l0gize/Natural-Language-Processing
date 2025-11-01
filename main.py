@@ -1,17 +1,19 @@
 import nltk
 from nltk import word_tokenize
 from nltk.probability import FreqDist
-import urllib.request
 from matplotlib import pyplot as plt
-from wordcloud import WordCloud
+import networkx as nx
+
 nltk.download('punkt')
+
+nltk.download('punkt_tab')
 
 #read and decode text
 with open("germanText.txt", "r", encoding="utf-8") as f:
     text = f.read()
 
 #tokenize text by words
-words = word_tokenize(text)
+words = word_tokenize(text, language='german')
 
 #check the number of words
 print(f"Number of words in the text (with punctuation): {len(words)}")
@@ -24,15 +26,35 @@ for word in words:
     if word.isalpha():
         words_no_punc.append(word.lower())
 
+
+total_words = len(words_no_punc)
+
 #print number of words without punctuation
-print(f"Number of words without punctuation: {len(words_no_punc)}")
+print(f"Number of words without punctuation: {total_words}")
 
 f_words_no_punc = FreqDist(words_no_punc)
 
-print(f_words_no_punc.most_common(10))
-
 frequencies = sorted(f_words_no_punc.values(), reverse=True)
 ranks = range(1, len(frequencies) + 1)
+
+# How many words do you have to know in order to learn 90% of language?
+
+ninty_percent_threshold = 0.9
+cumulative_coverage = 0
+num_of_words = 0
+
+for frequency in frequencies:
+    cumulative_coverage += (frequency / total_words)
+    num_of_words += 1
+    if cumulative_coverage >= ninty_percent_threshold:
+        break
+
+print(f"Number of words needed to learn 90% of language: {num_of_words}")
+
+# Words needed to learn 90% of German.
+most_common_words = f_words_no_punc.most_common(num_of_words)
+# print(most_common_words)
+
 
 plt.figure(figsize=(8,5))
 plt.loglog(ranks, frequencies)
@@ -40,4 +62,42 @@ plt.xlabel("Rank (r)")
 plt.ylabel("Frequency (f)")
 plt.title("Zipf's Law - log-log plot")
 plt.grid(True)
+plt.show()
+
+neighbors_dict = {}
+
+for index, word in enumerate(words_no_punc):
+    if word not in neighbors_dict:
+        neighbors_dict[word] = []
+    if index -1 >= 0:
+        neighbors_dict[word].append(words_no_punc[index - 1])
+    if index +1 < total_words:
+        neighbors_dict[word].append(words_no_punc[index + 1])
+
+# get rid of duplicates
+
+for word in neighbors_dict:
+    neighbors_dict[word] = list(set(neighbors_dict[word]))
+
+
+# Create an empty graph
+#
+neighbors_graph = nx.Graph()
+
+for word, word_neighbors in neighbors_dict.items():
+    if word not in neighbors_graph:
+        neighbors_graph.add_node(word)
+        for neighbor in word_neighbors:
+            if word != neighbor:
+                neighbors_graph.add_edge(word, neighbor)
+
+# Draw the graph
+plt.figure(figsize=(15, 15))
+
+degrees = dict(neighbors_graph.degree())
+
+top_connected_words = sorted(degrees, key=degrees.get, reverse=True)[:100]
+
+neighbors_subgraph = neighbors_graph.subgraph(top_connected_words)
+nx.draw(neighbors_subgraph, with_labels=True, node_size=50, alpha=0.5)
 plt.show()
