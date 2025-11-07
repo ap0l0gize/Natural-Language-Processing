@@ -1,13 +1,19 @@
 import nltk
+import os
 import language_processing_functions as lpf
 from nltk.probability import FreqDist
+from nltk import word_tokenize
 
 if __name__ == '__main__':
 
     nltk.download('punkt')
     nltk.download('punkt_tab')
 
-    words = lpf.read_and_decode()
+    base_dir = os.path.dirname(__file__)
+    language_corpus = os.path.join(base_dir, 'language_data', 'germanText.txt')
+    words = lpf.read_and_decode(language_corpus)
+
+    words = word_tokenize(words, language='german')
 
     words_no_punc = lpf.remove_punctuation(words)
     total_words_in_text = len(words_no_punc)

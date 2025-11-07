@@ -1,14 +1,12 @@
-from nltk import word_tokenize
 from matplotlib import pyplot as plt
 import networkx as nx
 
 
 #read and decode text
-def read_and_decode(filename="germanText.txt", encoding="utf-8"):
+def read_and_decode(filename, encoding="utf-8"):
     with open(filename, 'r', encoding=encoding) as f:
         text = f.read()
-        tokenized_words = word_tokenize(text, language='german')
-        return tokenized_words
+    return text
 
 def remove_punctuation(language_corpus):
     return [word.lower() for word in language_corpus if word.isalpha()]
